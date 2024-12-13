@@ -61,3 +61,11 @@ sysinfo.txt
 # Crashlytics generated file
 crashlytics-build.properties
 
+
+Assets/BOKI/
+
+Assets/BOKI.meta
+
+Assets/LowCharacterPack/
+
+Assets/*.meta
