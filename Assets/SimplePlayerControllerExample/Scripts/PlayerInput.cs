@@ -23,13 +23,8 @@ public class PlayerInput : MonoBehaviour
     {
         _inputActions.PlayerMap.Movement.performed += OnMove;
         _inputActions.PlayerMap.Movement.canceled += OnMove;
-        _inputActions.PlayerMap.Jump.performed += OnJump;
-        _inputActions.PlayerMap.Jump.canceled += OnJump;
-    }
-
-    private void OnJump(InputAction.CallbackContext obj)
-    {
-
+        _inputActions.PlayerMap.Jump.performed += c => jump = true;
+        _inputActions.PlayerMap.Jump.canceled += c => jump = false;
     }
 
     private void OnMove(InputAction.CallbackContext ctx)
