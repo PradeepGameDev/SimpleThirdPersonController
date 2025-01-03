@@ -5,6 +5,7 @@ public class PlayerInput : MonoBehaviour
 {
     public Vector3 moveInput;
     public bool jump;
+    public bool isRunning;
 
     private InputActions _inputActions;
     private Vector2 _moveInput2D;
@@ -25,6 +26,8 @@ public class PlayerInput : MonoBehaviour
         _inputActions.PlayerMap.Movement.canceled += OnMove;
         _inputActions.PlayerMap.Jump.performed += c => jump = true;
         _inputActions.PlayerMap.Jump.canceled += c => jump = false;
+        _inputActions.PlayerMap.Run.performed += c => isRunning = true;
+        _inputActions.PlayerMap.Run.canceled += c => isRunning = false;
     }
 
     private void OnMove(InputAction.CallbackContext ctx)
