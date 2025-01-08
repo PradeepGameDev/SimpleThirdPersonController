@@ -1,9 +1,9 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class PlayerInput : MonoBehaviour
+public class PlayerInputs : MonoBehaviour
 {
-    public Vector3 moveInput;
+    public Vector3 move;
     public bool jump;
     public bool isRunning;
 
@@ -33,8 +33,8 @@ public class PlayerInput : MonoBehaviour
     private void OnMove(InputAction.CallbackContext ctx)
     {
         _moveInput2D = ctx.ReadValue<Vector2>();
-        moveInput.x = _moveInput2D.x;
-        moveInput.z = _moveInput2D.y;
+        move.x = _moveInput2D.x;
+        move.z = _moveInput2D.y;
     }
 
     private void OnDisable()

@@ -1,46 +1,113 @@
+using Cinemachine;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
-[RequireComponent(typeof(PlayerInput))]
+[RequireComponent(typeof(PlayerInputs))]
 public class SimplePlayerController : MonoBehaviour
 {
-    [Header("Movement Settings")]
-    public float moveSpeed = 10;
-    public float rotationSpeed = 15;
+    [Header("Movement")]
+    [Tooltip("Speed when player is walking.")]
+    public float walkingSpeed = 2;
 
-    [Header("Actions Settings")]
-    public float jumpForce = 2;
-    [Tooltip("Distance from bottom of player to the ground.")]
-    [SerializeField] private float _groundDistance = 0.6f;
+    [Tooltip("Speed when player is running.")]
+    public float runningSpeed = 12;
 
-    [Header("Player Status")]
-    [SerializeField] private bool _isGrounded;
-    [SerializeField] private bool _isJumping;
+    [Tooltip("How fast the player turns to face move direction.")]
+    public float rotationSmoothRate = 15;
 
-    private PlayerInput _playerInput;
+    [Tooltip("How fast the player changes speed.")]
+    public float speedChangeRate = 10;
+
+    [Header("Jump")]
+    [Tooltip("If the player is jumping right now.")]
+    public bool isJumping;
+
+    [Tooltip("The height that player can jump.")]
+    public float jumpHeight = 1.5f;
+
+    [Tooltip("Custom gravity used by player for jump calculation. Actual gravity is -9.81f.")]
+    public float customGravity = -15f;
+
+    [Header("Grounded")]
+    [Tooltip("If the player is grounded or not.")]
+    public bool isGrounded;
+
+    [Tooltip("Radius of sphere which is used in ground detection. Make it same as capsule collider's radius.")]
+    public float groundCheckRadius = 0.28f;
+
+    [Tooltip("Offset of ground check, useful when ground is rough.")]
+    public float groundOffset = -0.2f;
+
+    [Tooltip("Time to wait before checking fall. Useful when going downward usally through stairs.")]
+    public float fallTimeout = 0.15f;
+
+    [Tooltip("Layer to check ground.")]
+    public LayerMask groundLayer;
+
+    private PlayerInputs _input;
     private Rigidbody _body;
     private Transform _cameraTransform;
-    private CapsuleCollider _collider;
+    private Animator _animator;
+    private CinemachineFreeLook _cinemachineCamera;
 
+    private int _verticalId;
+    private int _jumpId;
+    private int _fallId;
+    private int _groundedId;
+
+    private float _moveSpeed;
+    private float _currentMoveSpeed;
+    private float _speedAnimationBlend;
+    private float _fallTimeoutDelta;
+    private float _vertVel;
+
+    private Vector3 _currentMoveVelocity;
     private Vector3 _moveDirection;
     private Vector3 _targetDirection;
-    private Vector3 _playerBottomPosition;
-    private Vector3 _jumpVelocity;
+    private Vector3 _verticalVelocity;
+    private Vector3 _spherePosition;
     private Quaternion _targetRotation;
     private Quaternion _playerRotation;
 
-    private void Start()
+    private void Awake()
     {
-        //Getting component references
-        _playerInput = GetComponent<PlayerInput>();
+        // Getting component references.
+        _input = GetComponent<PlayerInputs>();
         _body = GetComponent<Rigidbody>();
         _cameraTransform = Camera.main.transform;
-        _collider = GetComponent<CapsuleCollider>();
+        _animator = GetComponent<Animator>();
+
+#if UNITY_6000_0_OR_NEWER
+        _cinemachineCamera = FindFirstObjectByType<CinemachineFreeLook>();
+#else
+        _cinemachineCamera = FindObjectOfType<CinemachineFreeLook>();
+#endif
+
+        AssignAnimatorIDs();
+    }
+
+    private void Start()
+    {
+        // If cinemachine camera is available then set this as follow target.
+        if (_cinemachineCamera != null)
+        {
+            _cinemachineCamera.Follow = transform;
+            _cinemachineCamera.LookAt = transform;
+        }
+    }
+
+    private void AssignAnimatorIDs()
+    {
+        // Getting animator parameter ids
+        _verticalId = Animator.StringToHash("Vertical");
+        _jumpId = Animator.StringToHash("IsJumping");
+        _fallId = Animator.StringToHash("Freefall");
+        _groundedId = Animator.StringToHash("IsGrounded");
     }
 
     private void FixedUpdate()
     {
-        if (_playerInput == null)
+        if (_input == null)
         {
             return;
         }
@@ -53,54 +120,72 @@ public class SimplePlayerController : MonoBehaviour
 
     private void CheckGrounded()
     {
-        // Getting player's bottom position with some offset so ground check can be detected accurately
-        _playerBottomPosition = _collider.bounds.min + (Vector3.up * 0.2f);
-        // Casting rays in down direction to check if it hits ground
-        _isGrounded = Physics.Raycast(_playerBottomPosition, Vector3.down, _groundDistance);
+        // Getting sphere position with some offset so ground check can be detected accurately.
+        _spherePosition = transform.position;
+        _spherePosition.y -= groundOffset;
+        // Casting rays in down direction to check if it hits ground.
+        isGrounded = Physics.CheckSphere(_spherePosition, groundCheckRadius, groundLayer, QueryTriggerInteraction.Ignore);
+
+        // Set animator IsGrounded property.
+        _animator.SetBool(_groundedId, isGrounded);
     }
 
     private void HandleMovement()
     {
-        if (_isJumping)
+        if (isJumping)
         {
             return;
         }
 
-        // Calculating move direction based on camera forward and player input
-        _moveDirection = _cameraTransform.forward * _playerInput.moveInput.z;
-        _moveDirection += _cameraTransform.right * _playerInput.moveInput.x;
-        _moveDirection.Normalize();
+        // Deciding the move speed of player.
+        _moveSpeed = _input.isRunning ? runningSpeed : walkingSpeed;
+
+        if (_input.move == Vector3.zero)
+        {
+            _moveSpeed = 0;
+        }
+
+        // Calculating move direction based on camera forward and player input.
+        _moveDirection = _cameraTransform.forward * _input.move.z;
+        _moveDirection += _cameraTransform.right * _input.move.x;
         _moveDirection.y = 0;
+        _moveDirection.Normalize();
 
-        // If not jumping, only then set y velocity to 0
-        if (!_isGrounded)
+        // Used to determine the animation based on speed.
+        _speedAnimationBlend = Mathf.Lerp(_speedAnimationBlend, _moveSpeed, Time.deltaTime * speedChangeRate);
+        if (_speedAnimationBlend < 0.01f)
         {
-            _moveDirection.y = _body.linearVelocity.y;
-        }
-        else
-        {
-            _moveDirection.y = 0;
+            _speedAnimationBlend = 0;
         }
 
-        // Changing move direction based on the move speed
-        _moveDirection *= moveSpeed;
+        // Calculating the current speed of the player.
+        _currentMoveVelocity = _body.linearVelocity;
+        _currentMoveVelocity.y = 0;
+        _currentMoveSpeed = _currentMoveVelocity.magnitude;
 
-        // Applying velocity 
+        if (_currentMoveSpeed < _moveSpeed - 0.1f || _currentMoveSpeed > _moveSpeed + 0.1f)
+        {
+            _moveSpeed = Mathf.Lerp(_currentMoveSpeed, _moveSpeed, speedChangeRate * Time.deltaTime);
+        }
+        _moveDirection *= _moveSpeed;
+
+        // Applying direction velocity 
         _body.linearVelocity = _moveDirection;
+
+        // Setting animation based on speed
+        _animator.SetFloat(_verticalId, _speedAnimationBlend);
     }
 
     private void HandleRotation()
     {
-        if (_isJumping)
+        if (isJumping)
         {
             return;
         }
 
-        _targetDirection = Vector3.zero;
-
         // Calculating move direction based on camera forward and player input
-        _targetDirection = _cameraTransform.forward * _playerInput.moveInput.z;
-        _targetDirection += _cameraTransform.right * _playerInput.moveInput.x;
+        _targetDirection = _cameraTransform.forward * _input.move.z;
+        _targetDirection += _cameraTransform.right * _input.move.x;
         _targetDirection.Normalize();
 
         // Checking if target direction is zero, then applying forward direction
@@ -111,35 +196,83 @@ public class SimplePlayerController : MonoBehaviour
 
         // Getting rotation from direction
         _targetRotation = Quaternion.LookRotation(_targetDirection);
-        // Resetting x and z axis, So player only rotates only in y-axis
+        // Resetting x and z axis, So player rotates only in y-axis
         _targetRotation.x = 0;
         _targetRotation.z = 0;
 
-        // Smoothing the transition effect from transform's rotation to new player rotation
-        _playerRotation = Quaternion.Slerp(transform.rotation, _targetRotation, rotationSpeed * Time.fixedDeltaTime);
+        // Smoothing the transition effect from transform's rotation to target rotation
+        _playerRotation = Quaternion.Slerp(transform.rotation, _targetRotation, rotationSmoothRate * Time.fixedDeltaTime);
         transform.rotation = _playerRotation;
     }
 
     private void HandleJump()
     {
-        if (_isGrounded)
+        if (isGrounded)
         {
-            _isJumping = false;
+            isJumping = false;
+
+            // Resetting fall timeout
+            _fallTimeoutDelta = fallTimeout;
+            
+            // Disable jump and freefall
+            _animator.SetBool(_jumpId, false);
+            _animator.SetBool(_fallId, false);
+
+            // Reset vertical velocity
+            if (_vertVel < 0)
+            {
+                _vertVel = -3;
+            }
+
+            // Checking jump input
+            if (_input.jump)
+            {
+                isJumping = true;
+
+                // Applying move direction so new velocity does
+                // not modify the direction player is going
+                _verticalVelocity = _moveDirection;
+
+                // Calculating square root of (-2 * jump height * gravity)
+                // to get velocity needed to jump to the specified height
+                _vertVel = Mathf.Sqrt(-2 * jumpHeight * customGravity);
+                _verticalVelocity.y = _vertVel;
+
+                // Applying velocity
+                _body.linearVelocity = _verticalVelocity;
+
+                // Enable jump animation
+                _animator.SetBool(_jumpId, true);
+            }
         }
-
-        if (_isJumping)
+        else
         {
-            return;
-        }
+            // Handling Freefall
+            if (_fallTimeoutDelta > 0)
+            {
+                _fallTimeoutDelta -= Time.deltaTime;
+            }
+            else
+            {
+                // Enable Freefall animation
+                _animator.SetBool(_fallId, true);
+            }
 
-        _isJumping = false;
+            // Set vertical velocity to original velocity
+            _verticalVelocity = _body.linearVelocity;
 
-        if (_isGrounded && _playerInput.jump)
-        {
-            _isJumping = true;
-            _jumpVelocity = _moveDirection;
-            _jumpVelocity.y = Mathf.Sqrt(-2 * jumpForce * Physics.gravity.y);
-            _body.linearVelocity = _jumpVelocity;
+            // Keep increase gravity if it does not reach its limit.
+            // Limit is useful to stop it increasing infinitely.
+            if (_vertVel < 50)
+            {
+                // Gradually increasing gravity
+                _vertVel += customGravity * Time.deltaTime;
+            }
+
+            // Set vertical velocity on y axis
+            _verticalVelocity.y = _vertVel;
+            // Assign modified velocity
+            _body.linearVelocity = _verticalVelocity;
         }
     }
 }
