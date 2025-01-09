@@ -7,10 +7,10 @@ public class SimplePlayerController : MonoBehaviour
 {
     [Header("Movement")]
     [Tooltip("Speed when player is walking.")]
-    public float walkingSpeed = 2;
+    public float walkingSpeed = 3;
 
     [Tooltip("Speed when player is running.")]
-    public float runningSpeed = 12;
+    public float runningSpeed = 8;
 
     [Tooltip("How fast the player turns to face move direction.")]
     public float rotationSmoothRate = 15;
@@ -32,7 +32,7 @@ public class SimplePlayerController : MonoBehaviour
     [Tooltip("If the player is grounded or not.")]
     public bool isGrounded;
 
-    [Tooltip("Radius of sphere which is used in ground detection. Make it same as capsule collider's radius.")]
+    [Tooltip("Radius of sphere which is used in ground detection. Make it slightly lower than capsule collider's radius.")]
     public float groundCheckRadius = 0.28f;
 
     [Tooltip("Offset of ground check, useful when ground is rough.")]
@@ -43,6 +43,9 @@ public class SimplePlayerController : MonoBehaviour
 
     [Tooltip("Layer to check ground.")]
     public LayerMask groundLayer;
+
+    [Tooltip("Maximum angle at which player can walk.")]
+    public float maxSlopeAngle = 50;
 
     private PlayerInputs _input;
     private Rigidbody _body;
@@ -55,19 +58,25 @@ public class SimplePlayerController : MonoBehaviour
     private int _fallId;
     private int _groundedId;
 
+    private bool _isOnSlope;
+
     private float _moveSpeed;
     private float _currentMoveSpeed;
     private float _speedAnimationBlend;
     private float _fallTimeoutDelta;
     private float _vertVel;
+    private float _slopeAngle;
 
     private Vector3 _currentMoveVelocity;
     private Vector3 _moveDirection;
     private Vector3 _targetDirection;
     private Vector3 _verticalVelocity;
     private Vector3 _spherePosition;
+    private Vector3 _slopeCheckRayPosition;
+    private Vector3 _slopeNormal;
     private Quaternion _targetRotation;
     private Quaternion _playerRotation;
+    private RaycastHit _hit;
 
     private void Awake()
     {
@@ -113,6 +122,7 @@ public class SimplePlayerController : MonoBehaviour
         }
 
         CheckGrounded();
+        CheckSlope();
         HandleMovement();
         HandleRotation();
         HandleJump();
@@ -130,9 +140,32 @@ public class SimplePlayerController : MonoBehaviour
         _animator.SetBool(_groundedId, isGrounded);
     }
 
+    private void CheckSlope()
+    {
+        if (!isGrounded)
+        {
+            _isOnSlope = false;
+            return;
+        }
+
+        _slopeCheckRayPosition = _spherePosition;
+        _slopeCheckRayPosition.y += groundOffset;
+
+        // Check if on ground and gets hit info
+        if (Physics.Raycast(_slopeCheckRayPosition, Vector3.down, out _hit, 1, groundLayer))
+        {
+            _slopeNormal = _hit.normal;
+
+            // Calculating angle between slope's normal and up direction
+            _slopeAngle = Vector3.Angle(_slopeNormal, Vector3.up);
+
+            _isOnSlope = _slopeAngle > 0 && _slopeAngle <= maxSlopeAngle;
+        }
+    }
+
     private void HandleMovement()
     {
-        if (isJumping)
+        if (!isGrounded)
         {
             return;
         }
@@ -167,18 +200,26 @@ public class SimplePlayerController : MonoBehaviour
         {
             _moveSpeed = Mathf.Lerp(_currentMoveSpeed, _moveSpeed, speedChangeRate * Time.deltaTime);
         }
+
+        // If on slope then modify move direction.
+        if (_isOnSlope)
+        {
+            // Apply same move direction on plane with slope normal.
+            _moveDirection = Vector3.ProjectOnPlane(_moveDirection, _slopeNormal).normalized;
+        }
+
         _moveDirection *= _moveSpeed;
 
-        // Applying direction velocity 
+        // Applying direction velocity.
         _body.linearVelocity = _moveDirection;
 
-        // Setting animation based on speed
+        // Setting animation based on speed.
         _animator.SetFloat(_verticalId, _speedAnimationBlend);
     }
 
     private void HandleRotation()
     {
-        if (isJumping)
+        if (!isGrounded)
         {
             return;
         }
@@ -224,6 +265,12 @@ public class SimplePlayerController : MonoBehaviour
                 _vertVel = -3;
             }
 
+            // If we are on a slope with too steep slope then return and do not jump
+            if (_slopeAngle > maxSlopeAngle)
+            {
+                return;
+            }
+
             // Checking jump input
             if (_input.jump)
             {
@@ -263,7 +310,7 @@ public class SimplePlayerController : MonoBehaviour
 
             // Keep increase gravity if it does not reach its limit.
             // Limit is useful to stop it increasing infinitely.
-            if (_vertVel < 50)
+            if (_vertVel > -50)
             {
                 // Gradually increasing gravity
                 _vertVel += customGravity * Time.deltaTime;

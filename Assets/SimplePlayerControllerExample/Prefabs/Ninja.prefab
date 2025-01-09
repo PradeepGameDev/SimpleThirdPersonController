@@ -605,6 +605,7 @@ MonoBehaviour:
   groundLayer:
     serializedVersion: 2
     m_Bits: 65
+  maxSlopeAngle: 50
 --- !u!114 &7906371230089952342
 MonoBehaviour:
   m_ObjectHideFlags: 0
