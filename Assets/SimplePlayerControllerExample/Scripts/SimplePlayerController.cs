@@ -192,7 +192,11 @@ public class SimplePlayerController : MonoBehaviour
         }
 
         // Calculating the current speed of the player.
+#if UNITY_6000_0_OR_NEWER
         _currentMoveVelocity = _body.linearVelocity;
+#else
+        _currentMoveVelocity = _body.velocity;
+#endif
         _currentMoveVelocity.y = 0;
         _currentMoveSpeed = _currentMoveVelocity.magnitude;
 
@@ -211,7 +215,11 @@ public class SimplePlayerController : MonoBehaviour
         _moveDirection *= _moveSpeed;
 
         // Applying direction velocity.
+#if UNITY_6000_0_OR_NEWER
         _body.linearVelocity = _moveDirection;
+#else
+        _body.velocity = _moveDirection;
+#endif
 
         // Setting animation based on speed.
         _animator.SetFloat(_verticalId, _speedAnimationBlend);
@@ -286,7 +294,11 @@ public class SimplePlayerController : MonoBehaviour
                 _verticalVelocity.y = _vertVel;
 
                 // Applying velocity
+#if UNITY_6000_0_OR_NEWER
                 _body.linearVelocity = _verticalVelocity;
+#else
+                _body.velocity = _verticalVelocity;
+#endif
 
                 // Enable jump animation
                 _animator.SetBool(_jumpId, true);
@@ -306,7 +318,11 @@ public class SimplePlayerController : MonoBehaviour
             }
 
             // Set vertical velocity to original velocity
+#if UNITY_6000_0_OR_NEWER
             _verticalVelocity = _body.linearVelocity;
+#else
+            _verticalVelocity = _body.velocity;
+#endif
 
             // Keep increase gravity if it does not reach its limit.
             // Limit is useful to stop it increasing infinitely.
@@ -319,7 +335,11 @@ public class SimplePlayerController : MonoBehaviour
             // Set vertical velocity on y axis
             _verticalVelocity.y = _vertVel;
             // Assign modified velocity
+#if UNITY_6000_0_OR_NEWER
             _body.linearVelocity = _verticalVelocity;
+#else
+            _body.velocity = _verticalVelocity;
+#endif
         }
     }
 }
