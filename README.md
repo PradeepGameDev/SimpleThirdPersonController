@@ -17,7 +17,7 @@ A Unity-based third-person character controller created entirely from scratch wi
 
 ### Prerequisites
 
-- **Unity**: Version 2021.3.21f1 LTS or later
+- **Unity**: Version 2021.3.21f1 LTS or later. It is also compatible with Unity version 6000.0 or newer.
 - Familiarity with Unity and C# scripting is helpful but not mandatory.
 
 ### Installation
