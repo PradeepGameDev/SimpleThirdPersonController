@@ -1218,6 +1218,10 @@ PrefabInstance:
       propertyPath: m_LocalRotation.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 9111498075735542832, guid: dbd16559e0292874fbc139f2065235c5, type: 3}
+      propertyPath: m_YAxis.Value
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1274,26 +1278,6 @@ PrefabInstance:
     - target: {fileID: 2799705766825952909, guid: d3fa64e23bf4fc5458a6ddfbc4394294, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7994791525013915783, guid: d3fa64e23bf4fc5458a6ddfbc4394294, type: 3}
-      propertyPath: obj1
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 7994791525013915783, guid: d3fa64e23bf4fc5458a6ddfbc4394294, type: 3}
-      propertyPath: obj2
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 7994791525013915783, guid: d3fa64e23bf4fc5458a6ddfbc4394294, type: 3}
-      propertyPath: obj3
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 7994791525013915783, guid: d3fa64e23bf4fc5458a6ddfbc4394294, type: 3}
-      propertyPath: enableDebug
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 7994791525013915783, guid: d3fa64e23bf4fc5458a6ddfbc4394294, type: 3}
-      propertyPath: slopeCheckDistance
-      value: 0.5
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
