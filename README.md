@@ -50,6 +50,12 @@ A Unity-based third-person character controller created entirely from scratch wi
 
 - Add your own animations, abilities, or interactions to expand functionality.
 
+## Screenshots
+
+![Idle Player](Assets/Screenshots/idle.png)
+![Player Jumping](Assets/Screenshots/jump.png)
+![Player Sprinting](Assets/Screenshots/sprint.png)
+
 ## 📜 License
 
 This project is licensed under the **MIT License** - see the [LICENSE.md](LICENSE.md) file for details.. You are free to use, modify, and distribute this project as per the terms of the license.
