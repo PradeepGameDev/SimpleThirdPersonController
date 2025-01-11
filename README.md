@@ -35,6 +35,9 @@ A Unity-based third-person character controller created entirely from scratch wi
 
 1. **Launch Unity Hub**.
 2. Click **Open** and select the folder where you cloned the repository.
+<div align="center">or</div>
+
+2. Create new or Open any existing project and import downloaded package from **Assets->Import Package->Custom Package**.
 
 ### Run the Demo
 
