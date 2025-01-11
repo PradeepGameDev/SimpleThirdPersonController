@@ -50,7 +50,7 @@ A Unity-based third-person character controller created entirely from scratch wi
 
 - Add your own animations, abilities, or interactions to expand functionality.
 
-## Screenshots
+## 📸 Screenshots
 
 ![Idle Player](Assets/Screenshots/idle.png)
 ![Player Jumping](Assets/Screenshots/jump.png)
