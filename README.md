@@ -18,6 +18,7 @@ A Unity-based third-person character controller created entirely from scratch wi
 ### Prerequisites
 
 - **Unity**: Version 2021.3.21f1 LTS or later. It is also compatible with Unity version 6000.0 or newer.
+- Make sure to import **Cinemachine** and **New Input System** from Unity Registry.
 - Familiarity with Unity and C# scripting is helpful but not mandatory.
 
 ### Installation
@@ -25,6 +26,11 @@ A Unity-based third-person character controller created entirely from scratch wi
 1. **Clone the repository**:
    ```bash
    git clone https://github.com/PradeepGameDev/SimpleThirdPersonController.git
+
+<div align="center">or</div>
+
+1. Download Unity package [SimpleThirdPersonController](Assets/SimpleThirdPersonController.unitypackage) inside **Assets** folder.
+
 ### Open the Project
 
 1. **Launch Unity Hub**.
@@ -32,7 +38,7 @@ A Unity-based third-person character controller created entirely from scratch wi
 
 ### Run the Demo
 
-1. Open the main scene from the `Scenes` folder.
+1. Open the demo scene from the `Scenes` folder.
 2. Press the **Play** button to see the third-person controller in action.
 
 ## 🎮 How to Use
