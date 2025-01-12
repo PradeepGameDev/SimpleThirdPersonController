@@ -51,6 +51,8 @@ A Unity-based third-person character controller created entirely from scratch wi
 - Use the default **WASD/arrow keys** for movement.
 - Rotate the camera using the **mouse**.
 
+> Note: Make sure the **ground layer** and **player's** layer is not same. Because it can cause **IsGrounded** to be true always.
+
 ### Customize Controls
 
 - Modify Unity's **Input Manager** to remap controls as needed.
